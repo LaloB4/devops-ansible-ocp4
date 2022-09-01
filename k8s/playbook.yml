@@ -1,21 +1,21 @@
-- name: Demostrar módulos K8s
+- name: Demostrar módulos k8s
   hosts: localhost
   gather_facts: no
   connection: local
   vars:
-    namespace:
+    namespace: marianogbarbero-dev
     
   module_defaults:
     group/k8s:
       namespace: "{{ namespace }}"
-      api_key: ""
-      host:
-      
+      api_key: "sha256~f-QKQrwnmv94OHReQ4OiM-DYf8vXaTK9m5tDTHfD184"
+      host: https://api.sandbox.x8i5.p1.openshiftapps.com:6443
+   
   tasks:
     - name: Crear los objetos del manifiesto
       k8s:
         state: present
-        src : "{{ playbook_dir + '/hello.yml' }}"
+        src: "{{ playbook_dir + '/hello.yml' }}"
         
     - name: Cambiar de ClusterIP a NodePort
       k8s_service:
@@ -26,9 +26,18 @@
           - port: 8080
             protocol: TCP
             
-     - name: Obtener indoramción de los pods
-       
-            
-      
-      
-    
+    - name: Obtener información de los pods
+      k8s_info:
+        kind: Pod
+        label_selectors:
+          - app = nodejs-ex
+          
+    - name: Exponer https con ClusterIP
+      k8s_service:
+        state: present
+        name: nodejs-ex
+        ports:
+          - port: 443
+            protocol: TCP
+        selector:
+          app: nodejs-ex
